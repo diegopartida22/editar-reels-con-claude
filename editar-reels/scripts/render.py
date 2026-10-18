@@ -56,11 +56,22 @@ def hex_rgb(h):
 # ------------------------------------------------------------------ subtítulos
 
 class Subtitulos:
-    """Dibuja un subtítulo en una capa RGBA 1080x1920. Tres estilos."""
+    """Dibuja un subtítulo en una capa RGBA 1080x1920. Tres estilos.
+
+    Si una frase no cabe en ANCHO_MAX, se parte en dos renglones por el espacio
+    más cercano a la mitad (sin partir una palabra resaltada). Si aun así no
+    cabe, se achica hasta que quepa: nunca se sale de la zona segura.
+    """
+
+    ESTILOS = {
+        #          px base, mayúsculas, sombra,     caja
+        "clasico": (None,  False,      "dura",     False),
+        "minimal": (46,    False,      "suave",    False),
+        "caja":    (70,    True,       "contorno", True),
+    }
 
     def __init__(self, fuente, estilo="clasico", acento="#FFD84A"):
         self.fuente, self.estilo, self.acento = fuente, estilo, hex_rgb(acento)
-        self._tinta = False
         self._f, self._cache = {}, {}
 
     def f(self, px):
@@ -80,42 +91,62 @@ class Subtitulos:
         if pos < len(texto): out.append((texto[pos:], 10, False))
         return out
 
+    def _runs(self, texto, resaltes, escala=1.0):
+        base, mayus, _, _ = self.ESTILOS[self.estilo]
+        out = []
+        for s, t, r in self.corridas(texto, resaltes):
+            px = (t * PX_POR_TAMANO if base is None else base) * escala
+            if self.estilo == "minimal": r = False      # minimal: sin color
+            out.append((s.upper() if mayus else s, self.f(px), r))
+        return out
+
+    def _ancho(self, runs):
+        return sum(f.getlength(s) for s, f, _ in runs)
+
+    def _partir(self, texto, resaltes):
+        """Uno o dos renglones, sin cortar dentro de un resalte."""
+        if self._ancho(self._runs(texto, resaltes)) <= ANCHO_MAX: return [texto]
+        protegidos = []
+        for frag, _ in resaltes:
+            i = texto.find(frag)
+            if i >= 0: protegidos.append((i, i + len(frag)))
+        cortes = [i for i, c in enumerate(texto) if c == " " and not any(a < i < b for a, b in protegidos)]
+        if not cortes: return [texto]
+        mitad = len(texto) / 2
+        i = min(cortes, key=lambda k: abs(k - mitad))
+        return [texto[:i], texto[i + 1:]]
+
     def capa(self, texto, resaltes=(), tinta=False):
         """tinta=True: sobre un corte claro (papel crema). Texto oscuro, acento naranja y sin
         sombra: el blanco con sombra no se lee sobre fondo claro."""
-        clave = (texto, tuple(map(tuple, resaltes)), tinta)
-        if clave not in self._cache:
-            self._tinta = tinta
-            self._cache[clave] = getattr(self, "_" + self.estilo)(texto, [tuple(r) for r in resaltes])
-        return self._cache[clave]
+        resaltes = [tuple(r) for r in resaltes]
+        clave = (texto, tuple(resaltes), tinta)
+        if clave in self._cache: return self._cache[clave]
 
-    # Blanco con sombra dura; la palabra clave en el acento y más grande.
-    def _clasico(self, texto, resaltes):
-        runs = [(s, self.f(t * PX_POR_TAMANO), r) for s, t, r in self.corridas(texto, resaltes)]
-        return self._linea(runs, sombra="dura", color_resalte=self.acento)
+        lineas = self._partir(texto, resaltes)
+        escala = 1.0
+        while escala > 0.6 and max(self._ancho(self._runs(l, resaltes, escala)) for l in lineas) > ANCHO_MAX:
+            escala -= 0.05
+        filas = [self._runs(l, resaltes, escala) for l in lineas]
 
-    # Más chico, sin color: el énfasis es solo el peso. Sombra suave.
-    def _minimal(self, texto, resaltes):
-        runs = [(s, self.f(46), False) for s, _, _ in self.corridas(texto, resaltes)]
-        return self._linea(runs, sombra="suave", color_resalte=None)
+        capa = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
+        alto = max(f.getmetrics()[0] + f.getmetrics()[1] for fila in filas for _, f, _ in fila)
+        paso = int(alto * 1.08)
+        y0 = Y_SUB - paso * (len(filas) - 1) / 2       # el bloque queda centrado en la banda
+        for k, fila in enumerate(filas):
+            self._linea(capa, fila, int(y0 + k * paso), tinta)
+        self._cache[clave] = capa
+        return capa
 
-    # Mayúsculas grandes; la palabra clave va sobre una caja del color de acento.
-    def _caja(self, texto, resaltes):
-        runs = [(s.upper(), self.f(70), r) for s, _, r in self.corridas(texto, resaltes)]
-        return self._linea(runs, sombra="contorno", color_resalte=None, caja=True)
-
-    def _linea(self, runs, sombra, color_resalte, caja=False):
+    def _linea(self, capa, runs, y_centro, tinta):
+        _, _, sombra, caja = self.ESTILOS[self.estilo]
+        blanco, acento = (255, 255, 255), self.acento
+        if tinta:
+            blanco, acento, sombra = (23, 22, 19), (224, 107, 69), None
         anchos = [f.getlength(s) for s, f, _ in runs]
         ancho = sum(anchos)
-        if ancho > ANCHO_MAX:
-            print(f"  ⚠ subtítulo de {ancho:.0f} px (máx {ANCHO_MAX}): {''.join(s for s, _, _ in runs)!r}")
         asc = max(f.getmetrics()[0] for _, f, _ in runs)
-        base = Y_SUB + asc // 2
-        capa = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
-        blanco, acento = (255, 255, 255), (color_resalte or self.acento)
-        if self._tinta:
-            blanco, acento, sombra = (23, 22, 19), (224, 107, 69), None
-            color_resalte = color_resalte and acento
+        base = y_centro + asc // 2
 
         if sombra == "suave":
             s = Image.new("RGBA", capa.size, (0, 0, 0, 0)); ds = ImageDraw.Draw(s); x = 540 - ancho / 2
@@ -129,15 +160,14 @@ class Subtitulos:
             if caja and r and t.strip():
                 b = d.textbbox((x, y), t.strip(), font=f)
                 lead = f.getlength(t) - f.getlength(t.lstrip())
-                d.rounded_rectangle((b[0] + lead - 14, b[1] - 10, b[2] + lead + 14, b[3] + 12), 14, fill=self.acento + (255,))
+                d.rounded_rectangle((b[0] + lead - 14, b[1] - 10, b[2] + lead + 14, b[3] + 12), 14, fill=acento + (255,))
             if sombra == "dura":
                 d.text((x + 6, y + 6), t, font=f, fill=(0, 0, 0, 166))
-            color = (acento if (r and color_resalte) else blanco)
+            color = acento if (r and not caja) else blanco
             if caja and r: color = (17, 17, 17)
             kw = dict(stroke_width=5, stroke_fill=(0, 0, 0, 255)) if (sombra == "contorno" and not r) else {}
             d.text((x, y), t, font=f, fill=color + (255,), **kw)
             x += w
-        return capa
 
 
 # ------------------------------------------------------------------ edición

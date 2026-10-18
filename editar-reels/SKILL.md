@@ -158,7 +158,7 @@ ffmpeg -loglevel error -pattern_type glob -i '_cut_*.jpg' -vf tile=8x1 rejilla.j
 # Paso 4 · Subtítulos
 
 - Banda arriba de la frente, ~300–420 px (ver *Zonas seguras*). En el pecho van los gráficos.
-- Frases de 2–4 palabras. **No más de 820 px de ancho**: más choca con la columna de botones.
+- Frases de 2–4 palabras. **No más de 820 px de ancho**: más choca con la columna de botones. `render.py` parte en dos renglones lo que no cabe y, si aun así no cabe, lo achica; pero es mejor cortar la frase en dos subtítulos.
 - **Resaltar 20–25 % de los subtítulos**, uno cada 2–3 s. **Solo la palabra clave**: sustantivos concretos, cifras y nombres de producto, no la línea entera.
 - Tamaños (escala de CapCut; en px ≈ ×6): 10 base · 12 énfasis · 13 listas · 14 los 2–3 golpes fuertes del video.
 - **Si un gráfico ya dice lo mismo que el subtítulo, apagar el subtítulo.** Repetir la frase en dos lugares se ve descuidado.
