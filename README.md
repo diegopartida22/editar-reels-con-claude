@@ -17,7 +17,7 @@ La guía completa, con capturas del proceso real, está en **[diegopartida.dev/e
 
 **A mano:**
 
-- **claude.ai o la app de Claude:** baja [`editar-reels.zip`](https://diegopartida.dev/edicion/descargar) y súbelo en *Settings → Capabilities → Skills*, con la ejecución de código encendida. Usa ese ZIP y no el botón *Download ZIP* de GitHub: el de GitHub mete la skill en una carpeta con otro nombre y Claude la rechaza.
+- **claude.ai o la app de Claude:** baja [`editar-reels.zip`](https://diegopartida.dev/edicion/descargar) y súbelo en la sección **Habilidades** (*Skills*) de la configuración de Claude, con la ejecución de código y creación de archivos encendida. Usa ese ZIP y no el botón *Download ZIP* de GitHub: el de GitHub mete la skill en una carpeta con otro nombre y Claude la rechaza.
 - **Claude Code:** copia la carpeta `editar-reels/` a `~/.claude/skills/`.
 
 ```bash
