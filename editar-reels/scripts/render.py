@@ -40,6 +40,10 @@ import json, os, subprocess, sys, time
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 FS = 1080 * 1920 * 3
+
+# zscale es lo que convierte bien un video HDR; no todas las builds de ffmpeg lo traen.
+HAY_ZSCALE = " zscale " in subprocess.run(["ffmpeg", "-hide_banner", "-filters"],
+                                          capture_output=True, text=True).stdout
 PX_POR_TAMANO = 6.0          # tamaño 10 ≈ 60 px, 13 ≈ 78 px
 Y_SUB = 365                  # centro de la banda de subtítulos (zona segura: 250–1500)
 ANCHO_MAX = 820              # más ancho choca con la columna de botones
@@ -149,6 +153,8 @@ class Edicion:
         self.cortes = [dict(c, archivo=self.p(c["archivo"])) for c in self.e.get("cortes", [])]
         self.total = sum(t["frames"] for t in self.e["tomas"])
         self._png = {}
+        self._info = {}
+        self._avisos = set()
 
     def p(self, r): return r if os.path.isabs(r) else os.path.normpath(os.path.join(self.dir, r))
 
@@ -174,12 +180,37 @@ class Edicion:
             if s["desde"] <= t < s["hasta"] and s["texto"].strip():
                 return self.sub.capa(s["texto"], s.get("resaltes", []), tinta)
 
+    def info(self, clip):
+        """Lo que hace falta saber de un archivo: si tiene audio y si es HDR."""
+        ruta = self.p(clip)
+        if ruta not in self._info:
+            out = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
+                "stream=codec_type,color_transfer", "-of", "json", ruta], capture_output=True, text=True).stdout
+            streams = json.loads(out or "{}").get("streams", [])
+            video = next((x for x in streams if x.get("codec_type") == "video"), {})
+            self._info[ruta] = {
+                "audio": any(x.get("codec_type") == "audio" for x in streams),
+                # PQ (smpte2084) y HLG (arib-std-b67): lo que graban los iPhone y muchos Android en HDR.
+                "hdr": video.get("color_transfer") in ("smpte2084", "arib-std-b67"),
+            }
+        return self._info[ruta]
+
     def decodificar(self, clip, desde, n, zoom=1.0, dy=0):
+        # Escala para CUBRIR 1080x1920 sin deformar y recorta lo que sobra: un video
+        # horizontal o cuadrado queda centrado en vez de aplastado. `dy` mueve el
+        # recorte hacia abajo (positivo) o arriba, sin salirse del cuadro.
         Wd = int(round(1080 * zoom / 2)) * 2; Hd = int(round(1920 * zoom / 2)) * 2
-        x0 = (Wd - 1080) // 2; y0 = max(0, min(Hd - 1920, Hd // 2 - 960 + dy))
+        vf = f"fps={self.fps},scale={Wd}:{Hd}:force_original_aspect_ratio=increase,crop=1080:1920:(iw-1080)/2:max(0\\,min(ih-1920\\,(ih-1920)/2+{dy}))"
+        if self.info(clip)["hdr"]:
+            if HAY_ZSCALE:
+                # HDR → SDR: sin esto los videos HDR salen lavados y grises.
+                vf = ("zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,"
+                      "zscale=t=bt709:m=bt709:r=tv,format=yuv420p," + vf)
+            elif clip not in self._avisos:
+                self._avisos.add(clip)
+                print(f"  ⚠ {clip} es HDR y este ffmpeg no trae zscale: los colores pueden salir lavados.")
         return subprocess.Popen(["ffmpeg", "-loglevel", "error", "-ss", f"{desde:.4f}", "-i", self.p(clip),
-            "-frames:v", str(n), "-vf", f"fps={self.fps},scale={Wd}:{Hd},crop=1080:1920:{x0}:{y0}",
-            "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+            "-frames:v", str(n), "-vf", vf, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
 
     def componer(self, f, base):
         """Frame f de la línea de tiempo sobre la imagen base (RGB del crudo)."""
@@ -255,8 +286,14 @@ class Edicion:
             a, b = max(f_ini, acc), min(f_fin, acc + tm["frames"])
             if a < b:
                 d = (b - a) / self.fps
-                ent += ["-ss", f"{tm['desde'] + (a - acc) / self.fps:.4f}", "-t", f"{d:.4f}", "-i", self.p(tm["clip"])]
-                fil.append(f"[{n}:a]aresample=48000,afade=t=in:d=0.01,afade=t=out:st={max(0, d - 0.012):.4f}:d=0.012[v{n}]"); n += 1
+                if self.info(tm["clip"])["audio"]:
+                    ent += ["-ss", f"{tm['desde'] + (a - acc) / self.fps:.4f}", "-t", f"{d:.4f}", "-i", self.p(tm["clip"])]
+                else:
+                    # Un clip sin pista de audio (b-roll de algunas cámaras) entra como silencio.
+                    ent += ["-f", "lavfi", "-t", f"{d:.4f}", "-i", "anullsrc=r=48000:cl=stereo"]
+                # Todo a 48 kHz estéreo: mezclar un clip mono con uno estéreo rompe el concat.
+                fil.append(f"[{n}:a]aresample=48000,aformat=sample_rates=48000:channel_layouts=stereo,"
+                           f"afade=t=in:d=0.01,afade=t=out:st={max(0, d - 0.012):.4f}:d=0.012[v{n}]"); n += 1
             acc += tm["frames"]
         voz = "".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1[voz]"
         mezcla, k = ["[voz]"], n
@@ -264,7 +301,8 @@ class Edicion:
             t = s["en"] - f_ini / self.fps
             if t < 0 or t > (f_fin - f_ini) / self.fps: continue
             ent += ["-i", self.p(s["archivo"])]
-            fil.append(f"[{k}:a]aresample=48000,volume={s.get('volumen', 0.6)},adelay={int(t * 1000)}:all=1[s{k}]")
+            fil.append(f"[{k}:a]aresample=48000,aformat=sample_rates=48000:channel_layouts=stereo,"
+                       f"volume={s.get('volumen', 0.6)},adelay={int(t * 1000)}:all=1[s{k}]")
             mezcla.append(f"[s{k}]"); k += 1
         fil.append(voz)
         fil.append("".join(mezcla) + f"amix=inputs={len(mezcla)}:normalize=0:duration=first[a]" if len(mezcla) > 1 else "[voz]anull[a]")

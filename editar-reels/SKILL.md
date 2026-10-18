@@ -308,6 +308,7 @@ python3 render.py edicion.json                           # el video completo
 ```
 
 - Medido en una Mac: ~2 s de render por segundo de video. Un Reel de 45 s sale en menos de 2 minutos.
+- Acepta cualquier video: los horizontales o cuadrados se recortan al centro para llenar 9:16 sin deformarse (usar `dy` para subir o bajar el recorte y `zoom` para acercar), los HDR del iPhone se convierten para que no salgan lavados, y los clips sin audio entran como silencio. Si la persona grabó en horizontal, **avisarle** que se va a perder lo de los lados y componer un frame para que lo vea antes.
 - **Tiempos de los subtítulos en segundos de la línea de tiempo final**, no del crudo.
 - Las capas son carpetas de PNG 1080x1920 con alfa (con o sin `segs.json`). Los cortes a explicación son mp4 opacos; marcar `"tinta": true` si son claros.
 - **Revisar por tramos**: renderizar el tramo que cambió y mandárselo a la persona, no el video entero cada vez.
