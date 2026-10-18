@@ -36,6 +36,7 @@ Ya instalada, háblale normal, como a un editor. Primero agrega en la app de Cla
 | Un gráfico | “Cuando digo ‘WhatsApp’, pon una notificación con su logo debajo de mi cara.” |
 | Animación a pantalla completa | “En la parte donde explico cómo me llegan los pedidos, cambia a una animación a pantalla completa que lo muestre paso a paso.” |
 | El estilo de Diego | “Usa gráficos de vidrio estilo iPhone, subtítulos con la palabra clave en amarillo y animaciones sobre fondo crema, como los Reels de Diego Partida.” |
+| Varios inicios | “Grabé 3 formas de empezar. Arma el Reel con cada una, con el mismo resto del video, para que yo escoja.” |
 | Un cambio | “En el segundo 12 el subtítulo dice mal mi marca: es Café Lunar. Corrígelo.” |
 | La portada | “Hazme 3 portadas con el título ‘Así edito en 5 minutos’.” |
 | Que se acuerde | “Me gustó el color y las tarjetas de vidrio. Anótalo en mi skill.” |

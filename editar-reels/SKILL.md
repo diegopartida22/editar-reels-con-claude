@@ -58,6 +58,7 @@ La guía (diegopartida.dev/edicion) les da estos mensajes de ejemplo. Qué hacer
 | "Haz una animación a pantalla completa donde explico …" | Un *corte a explicación* (*Paso 5*): escena que **muestra** el proceso paso a paso, 2.5–5 s por idea, su voz sigue sonando. Proponer en una frase qué se va a ver antes de hacerla. |
 | "Que se vea como los de Diego Partida" | `SUBTITULOS = clasico`, `GRAFICOS = vidrio`, `ACENTO = #FFD84A`, explicaciones sobre papel crema `#F3F1ED` con tinta `#171613`, acento naranja `#E06B45`, letra serif grande para titulares y notas a mano. |
 | "Quiero que se vea como esta imagen" (adjunta captura) | Sacar de la imagen colores, tipo de letra, forma de las tarjetas y movimiento; componer una prueba sobre un frame suyo y confirmar. No copiar logos ni marcas ajenas. |
+| "Grabé varias formas de empezar, arma una con cada una" | Armar el resto del video una sola vez y sacar una versión por cada inicio (`reel_inicio-1.mp4`, `-2`…), mismo cuerpo. Decir en una línea qué cambia entre ellas. |
 | "En el segundo X cambia …" | Cambiar solo eso y volver a hacer **solo ese tramo** (`render.py edicion.json desde hasta`), mandárselo y luego el video completo. |
 | "Hazme portadas" | *Paso 7*. Dos o tres opciones. |
 | "Me gustó X, anótalo" | Escribirlo en *Perfil* o en *Bitácora*. Si puedes editar la skill instalada (Claude Code), hacerlo ahí. Si no, darle la skill actualizada como ZIP para que la vuelva a subir, y decirle en una línea por qué. |
