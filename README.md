@@ -25,6 +25,23 @@ git clone https://github.com/diegopartida22/editar-reels-con-claude
 cp -R editar-reels-con-claude/editar-reels ~/.claude/skills/
 ```
 
+## Cómo usarla
+
+Ya instalada, háblale normal, como a un editor. Primero agrega en la app de Claude la carpeta donde están tus videos. Algunos mensajes que funcionan:
+
+| Quieres | Pídele |
+|---|---|
+| El Reel completo | “Edita mi Reel con la skill. Mis videos están en la carpeta Videos/martes. Antes de editar, enséñame qué partes vas a usar.” |
+| Algo rápido | “Edita los videos de Videos/martes solo con cortes y subtítulos.” |
+| Un gráfico | “Cuando digo ‘WhatsApp’, pon una notificación con su logo debajo de mi cara.” |
+| Animación a pantalla completa | “En la parte donde explico cómo me llegan los pedidos, cambia a una animación a pantalla completa que lo muestre paso a paso.” |
+| El estilo de Diego | “Usa gráficos de vidrio estilo iPhone, subtítulos con la palabra clave en amarillo y animaciones sobre fondo crema, como los Reels de Diego Partida.” |
+| Un cambio | “En el segundo 12 el subtítulo dice mal mi marca: es Café Lunar. Corrígelo.” |
+| La portada | “Hazme 3 portadas con el título ‘Así edito en 5 minutos’.” |
+| Que se acuerde | “Me gustó el color y las tarjetas de vidrio. Anótalo en mi skill.” |
+
+Más ejemplos y el cuestionario de estilo en [diegopartida.dev/edicion](https://diegopartida.dev/edicion).
+
 ## Qué hay aquí
 
 ```

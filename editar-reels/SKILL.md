@@ -38,6 +38,32 @@ Para medir el encuadre: sacar un frame donde la persona mire a cámara y anotar 
 
 **El perfil es el punto de partida, no la última palabra.** En el primer video, componer la primera tarjeta y el primer subtítulo sobre dos frames reales de la persona y confirmar antes de seguir: escoger un estilo en abstracto y verlo sobre tu propia cara son cosas distintas.
 
+## Primera vez (antes del primer video)
+
+La persona probablemente nunca ha editado ni usado una terminal. Hablarle claro, sin jerga ("crudos", "render", "bbox"), y resolver lo técnico tú:
+
+1. Revisar que puedes ver la carpeta de sus videos. Si no, decirle exactamente cómo agregarla en la app.
+2. Revisar `ffmpeg`, Python con Pillow y Node. Si falta algo, instalarlo tú si puedes; si no, darle **un solo comando** para copiar y pegar, y explicar en una línea para qué es.
+3. Si el *Perfil* está vacío, preguntarlo con opciones (no en abierto) y mostrar sobre un frame suyo cómo se ve antes de seguir.
+
+## Lo que te pueden pedir
+
+La guía (diegopartida.dev/edicion) les da estos mensajes de ejemplo. Qué hacer con cada uno:
+
+| Te piden | Qué hacer |
+|---|---|
+| "Edita mi Reel, mis videos están en …" | El flujo completo (Pasos 1–8). **Antes de cortar, enseñar el plan** (qué partes vas a usar, en una tabla simple) y esperar su sí. |
+| "Solo cortes y subtítulos" | Pasos 1–4 y 6–8. Sin gráficos ni animaciones aunque `RECURSOS` diga otra cosa. |
+| "Cuando digo X, pon …" | Un gráfico sobre el pecho (*Paso 5*), del estilo de `GRAFICOS`, que entra al empezar la palabra y sale cuando termina la idea. Logo real si es una app o marca. |
+| "Haz una animación a pantalla completa donde explico …" | Un *corte a explicación* (*Paso 5*): escena que **muestra** el proceso paso a paso, 2.5–5 s por idea, su voz sigue sonando. Proponer en una frase qué se va a ver antes de hacerla. |
+| "Que se vea como los de Diego Partida" | `SUBTITULOS = clasico`, `GRAFICOS = vidrio`, `ACENTO = #FFD84A`, explicaciones sobre papel crema `#F3F1ED` con tinta `#171613`, acento naranja `#E06B45`, letra serif grande para titulares y notas a mano. |
+| "Quiero que se vea como esta imagen" (adjunta captura) | Sacar de la imagen colores, tipo de letra, forma de las tarjetas y movimiento; componer una prueba sobre un frame suyo y confirmar. No copiar logos ni marcas ajenas. |
+| "En el segundo X cambia …" | Cambiar solo eso y volver a hacer **solo ese tramo** (`render.py edicion.json desde hasta`), mandárselo y luego el video completo. |
+| "Hazme portadas" | *Paso 7*. Dos o tres opciones. |
+| "Me gustó X, anótalo" | Escribirlo en *Perfil* o en *Bitácora*. Si puedes editar la skill instalada (Claude Code), hacerlo ahí. Si no, darle la skill actualizada como ZIP para que la vuelva a subir, y decirle en una línea por qué. |
+
+Siempre terminar con: dónde quedó el video, qué revisar (2–3 timecodes) y cómo pedir cambios.
+
 ## El entregable son dos piezas: el video y la portada
 
 Un Reel no está terminado hasta que tiene portada. Hacerla siempre como último paso, sin que la pidan (ver *Portada*).
